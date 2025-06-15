@@ -1,6 +1,15 @@
 #include <iostream>
 using namespace std;
 
+class User{
+    private:
+    int accountNo;
+    string name;
+    int pin;
+    string address;
+    string branchName;
+};
+
 int main(){
 
     cout<<"======== Bank Management System ========"<<endl;
