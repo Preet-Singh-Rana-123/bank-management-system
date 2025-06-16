@@ -24,6 +24,9 @@ public:
     }
 
     friend void writeInFile(User u);
+    friend bool isCorrectAccount(User u, int n);
+    friend bool isCorrectPin(User u, int pin);
+    friend void showAccountDetails(User u, int n);
 };
 
 vector<User> users;
@@ -35,13 +38,27 @@ void writeInFile(User u)
     if (outfile.is_open())
     {
         outfile << u.accountNo << "|" << u.name << "|" << u.address << "|" << u.branchName << "|" << u.pin << "\n";
-        cout << "your account has been created.\n";
+        cout << "Account created successfully!! Your account number is " << u.accountNo << endl;
         outfile.close();
     }
     else
     {
         cout << "Sorry error in opening accounts.txt.\n";
     }
+}
+
+bool isCorrectAccount(User u, int n)
+{
+    if (u.accountNo == n)
+        return 1;
+    return 0;
+}
+
+bool isCorrectPin(User u, int pin)
+{
+    if (u.pin == pin)
+        return 1;
+    return 0;
 }
 
 void createAccount()
@@ -65,38 +82,79 @@ void createAccount()
     writeInFile(users.back());
 }
 
-int main()
+void showAccountDetails(User u, int n)
 {
-    cout << "======== Bank Management System ========" << endl;
+    int newUserInputPin;
+    if (isCorrectPin(u, n))
+    {
+        cout << "Account Number: " << u.accountNo << endl;
+        cout << "Name: " << u.name << endl;
+        cout << "Address: " << u.address << endl;
+        cout << "Branch Name: " << u.branchName << endl;
+    }
+    else
+    {
+        cout << "Pin is incorrect.\n";
+        cin>>newUserInputPin;
+        showAccountDetails(u,newUserInputPin);
+    }
+}
+
+void systemHelpList(){
+    cout << "\n======== Bank Management System ========" << endl;
     cout << "1. Create Account\n";
     cout << "2. See account details\n";
     cout << "3. Deposite amount\n";
     cout << "4. Withdraw amount\n";
     cout << "5. Update account details\n";
     cout << "6. Exit\n";
+}
 
-    int userChoice;
-
-    cin >> userChoice;
-    cin.ignore();
-
-    switch (userChoice)
+int main()
+{
+    systemHelpList();
+    while (true)
     {
-    case 1:
-    {
-        createAccount();
-        break;
-    }
-    case 2:
-    {
-        int pin;
-        int accountNo;
+        int userChoice;
 
-        cout << "Enter your account no. : ";
-        cin >> accountNo;
-        cout << "Enter your pin:  ";
-        cin >> pin;
+        cin >> userChoice;
+        cin.ignore();
+
+        switch (userChoice)
+        {
+        case 1:
+        {
+            createAccount();
+            systemHelpList();
+            break;
+        }
+        case 2:
+        {
+            int userInputAccountNo, userInputPin;
+            cout << "Enter your account number: ";
+            cin >> userInputAccountNo;
+
+            bool found = false;
+
+            for (const auto &user : users)
+            {
+                if (isCorrectAccount(user, userInputAccountNo))
+                {
+                    cout << "Enter your pin: ";
+                    cin >> userInputPin;
+                    showAccountDetails(user, userInputPin);
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                cout<<"Account not found!!\n";
+                cout<<"Try Again\n";
+            }
+            break;
+        }
+        }
     }
-    }
+
     return 0;
 }
