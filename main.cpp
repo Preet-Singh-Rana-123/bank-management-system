@@ -34,6 +34,8 @@ public:
     friend void withdrawAmount();
     friend void writeTransactionHistory(User u);
     friend bool isAccountPresent(int accountNo);
+    friend void updateAccount();
+    friend void showHistory();
 };
 
 vector<User> users;
@@ -145,15 +147,16 @@ void showAccountDetail()
     }
 }
 
-User foundAccount(int accountNo)
+User* foundAccount(int accountNo)
 {
-    for (const auto &user : users)
+    for (auto &user : users)
     {
         if (isCorrectAccount(user, accountNo))
         {
-            return user;
+            return &user;
         }
     }
+    return nullptr;
 }
 
 void depositeAomount()
@@ -167,10 +170,10 @@ void depositeAomount()
         cout << "Try Again.\n";
         depositeAomount();
     }
-    User foundedAccount = foundAccount(userInputAccountNo);
+    User *foundedAccount = foundAccount(userInputAccountNo);
     cout << "Enter your pin: ";
     cin >> userInputPin;
-    if (!isCorrectPin(foundedAccount, userInputPin))
+    if (!isCorrectPin(*foundedAccount, userInputPin))
     {
         cout << "Pin is incorrect!!\n";
         cout << "Try Again.\n";
@@ -186,8 +189,8 @@ void depositeAomount()
         depositeAomount();
     }
 
-    foundedAccount.balance += userInputBalance;
-    foundedAccount.transactionHistory.push_back("Deposited: " + to_string(userInputBalance));
+    foundedAccount->balance += userInputBalance;
+    foundedAccount->transactionHistory.push_back("Deposited: " + to_string(userInputBalance));
     cout << "Your amount has been deposited!\n";
 }
 
@@ -202,17 +205,17 @@ void withdrawAmount()
         cout << "Try Again.\n";
         withdrawAmount();
     }
-    User foundedAccount = foundAccount(userInputAccountNo);
+    User *foundedAccount = foundAccount(userInputAccountNo);
     cout << "Enter your pin: ";
     cin >> userInputPin;
-    if (!isCorrectPin(foundedAccount, userInputPin))
+    if (!isCorrectPin(*foundedAccount, userInputPin))
     {
         cout << "Pin is incorrect!!\n";
         cout << "Try Again.\n";
         withdrawAmount();
     }
 
-    if (foundedAccount.balance <= 0)
+    if (foundedAccount->balance <= 0)
     {
         cout << "Your balance is 0. Amount cannot be withdrawed\n";
         return;
@@ -227,13 +230,15 @@ void withdrawAmount()
         withdrawAmount();
     }
 
-    foundedAccount.balance -= userInputBalance;
-    foundedAccount.transactionHistory.push_back("Withdraw: " + to_string(userInputBalance));
+    foundedAccount->balance -= userInputBalance;
+    foundedAccount->transactionHistory.push_back("Withdraw: " + to_string(userInputBalance));
     cout << "Your amount has been withdrawed!\n";
+    cout<<"You have "<<foundedAccount->balance<<" amount left in your account.\n";
 }
 
-void updateAccount(){
-    int userInputAccountNo, userInputPin, userInputBalance;
+void updateAccount()
+{
+    int userInputAccountNo, userInputPin;
     cout << "Enter your account number: ";
     cin >> userInputAccountNo;
     if (!isAccountPresent(userInputAccountNo))
@@ -242,17 +247,112 @@ void updateAccount(){
         cout << "Try Again.\n";
         updateAccount();
     }
-    User foundedAccount = foundAccount(userInputAccountNo);
+    User *foundedAccount = foundAccount(userInputAccountNo);
     cout << "Enter your pin: ";
     cin >> userInputPin;
-    if (!isCorrectPin(foundedAccount, userInputPin))
+    cin.ignore();
+    if (!isCorrectPin(*foundedAccount, userInputPin))
     {
         cout << "Pin is incorrect!!\n";
         cout << "Try Again.\n";
         updateAccount();
     }
 
+    cout << "a. To update Name.\n";
+    cout << "b. To update Address.\n";
+    cout << "c. To update Branch Name.\n";
+    cout << "d. To update all.\n";
 
+    char userChoice;
+    cout << "Enter your choice: ";
+    cin >> userChoice;
+    cin.ignore();
+
+    switch (userChoice)
+    {
+    case 'a':
+    {
+        string newName;
+        cout << "Enter your name: ";
+        getline(cin, newName);
+        foundedAccount->name = newName;
+        cout<<"Your name has been updated\n";
+        break;
+    }
+    case 'b':
+    {
+        string newAddress;
+        cout << "Enter your Address: ";
+        getline(cin, newAddress);
+        foundedAccount->address = newAddress;
+        cout<<"Your Address has been updated!!\n";
+        break;
+    }
+    case 'c':
+    {
+        string newBranchName;
+        cout << "Enter your Branch name: ";
+        getline(cin, newBranchName);
+        foundedAccount->name = newBranchName;
+        cout<<"Your Branch Name has been updated!!\n";
+        break;
+    }
+    case 'd':
+    {
+        string newName, newAddress, newBranchName;
+        cout << "Enter your name: ";
+        getline(cin, newName);
+        cout << "Enter your Address: ";
+        getline(cin, newAddress);
+        cout << "Enter your Branch name: ";
+        getline(cin, newBranchName);
+        foundedAccount->name = newName;
+        foundedAccount->address = newAddress;
+        foundedAccount->name = newBranchName;
+        cout<<"Your account has been updated!!\n";
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+}
+
+void showHistory()
+{
+    int userInputAccountNo, userInputPin;
+    cout << "Enter your account number: ";
+    cin >> userInputAccountNo;
+    if (!isAccountPresent(userInputAccountNo))
+    {
+        cout << "Account not present!!\n";
+        cout << "Try Again.\n";
+        showHistory();
+    }
+    User *foundedAccount = foundAccount(userInputAccountNo);
+    cout << "Enter your pin: ";
+    cin >> userInputPin;
+    cin.ignore();
+    if (!isCorrectPin(*foundedAccount, userInputPin))
+    {
+        cout << "Pin is incorrect!!\n";
+        cout << "Try Again.\n";
+        showHistory();
+    }
+
+    cout << "Transaction history for Account " << foundedAccount->accountNo << ":\n";
+    if (foundedAccount->transactionHistory.empty())
+    {
+        cout << "No Transactions yet.\n";
+    }
+    else
+    {
+        for (auto &record : foundedAccount->transactionHistory)
+        {
+            cout << "- " << record << endl;
+        }
+    }
 }
 
 void systemHelpList()
@@ -288,19 +388,34 @@ int main()
         case 2:
         {
             showAccountDetail();
+            systemHelpList();
             break;
         }
         case 3:
         {
             depositeAomount();
+            systemHelpList();
             break;
         }
         case 4:
         {
             withdrawAmount();
+            systemHelpList();
             break;
         }
         case 5:
+        {
+            updateAccount();
+            systemHelpList();
+            break;
+        }
+        case 6:
+        {
+            showHistory();
+            systemHelpList();
+            break;
+        }
+        default:
         {
             break;
         }
