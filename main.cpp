@@ -415,10 +415,6 @@ int main()
             systemHelpList();
             break;
         }
-        default:
-        {
-            break;
-        }
         }
     }
 
