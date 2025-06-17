@@ -12,6 +12,8 @@ private:
     int pin;
     string address;
     string branchName;
+    int balance;
+    vector<string> transactionHistory;
 
 public:
     User(string name, string address, string branchName, int pin)
@@ -21,12 +23,17 @@ public:
         this->branchName = branchName;
         this->pin = pin;
         this->accountNo = ++nextAccountNo;
+        this->balance = 0;
     }
 
     friend void writeInFile(User u);
     friend bool isCorrectAccount(User u, int n);
     friend bool isCorrectPin(User u, int pin);
-    friend void showAccountDetails(User u, int n);
+    friend void displayAccountDetails(User u, int n);
+    friend void depositeAomount();
+    friend void withdrawAmount();
+    friend void writeTransactionHistory(User u);
+    friend bool isAccountPresent(int accountNo);
 };
 
 vector<User> users;
@@ -51,6 +58,16 @@ bool isCorrectAccount(User u, int n)
 {
     if (u.accountNo == n)
         return 1;
+    return 0;
+}
+
+bool isAccountPresent(int accountNo)
+{
+    for (auto &u : users)
+    {
+        if (accountNo == u.accountNo)
+            return 1;
+    }
     return 0;
 }
 
@@ -82,7 +99,7 @@ void createAccount()
     writeInFile(users.back());
 }
 
-void showAccountDetails(User u, int n)
+void displayAccountDetails(User u, int n)
 {
     int newUserInputPin;
     if (isCorrectPin(u, n))
@@ -95,19 +112,159 @@ void showAccountDetails(User u, int n)
     else
     {
         cout << "Pin is incorrect.\n";
-        cin>>newUserInputPin;
-        showAccountDetails(u,newUserInputPin);
+        cout << "Write your pin again: ";
+        cin >> newUserInputPin;
+        displayAccountDetails(u, newUserInputPin);
     }
 }
 
-void systemHelpList(){
+void showAccountDetail()
+{
+    int userInputAccountNo, userInputPin;
+    cout << "Enter your account number: ";
+    cin >> userInputAccountNo;
+
+    bool found = false;
+
+    for (const auto &user : users)
+    {
+        if (isCorrectAccount(user, userInputAccountNo))
+        {
+            cout << "Enter your pin: ";
+            cin >> userInputPin;
+            displayAccountDetails(user, userInputPin);
+            found = true;
+            break;
+        }
+    }
+    if (!found)
+    {
+        cout << "Account not found!!\n";
+        cout << "Try Again\n";
+        showAccountDetail();
+    }
+}
+
+User foundAccount(int accountNo)
+{
+    for (const auto &user : users)
+    {
+        if (isCorrectAccount(user, accountNo))
+        {
+            return user;
+        }
+    }
+}
+
+void depositeAomount()
+{
+    int userInputAccountNo, userInputPin, userInputBalance;
+    cout << "Enter your account number: ";
+    cin >> userInputAccountNo;
+    if (!isAccountPresent(userInputAccountNo))
+    {
+        cout << "Account not present!!\n";
+        cout << "Try Again.\n";
+        depositeAomount();
+    }
+    User foundedAccount = foundAccount(userInputAccountNo);
+    cout << "Enter your pin: ";
+    cin >> userInputPin;
+    if (!isCorrectPin(foundedAccount, userInputPin))
+    {
+        cout << "Pin is incorrect!!\n";
+        cout << "Try Again.\n";
+        depositeAomount();
+    }
+
+    cout << "Enter balance you want to deposite: ";
+    cin >> userInputBalance;
+    if (userInputBalance <= 0)
+    {
+        cout << "Invalid amount. Please enter a positive number.\n";
+        cout << "Try Again\n";
+        depositeAomount();
+    }
+
+    foundedAccount.balance += userInputBalance;
+    foundedAccount.transactionHistory.push_back("Deposited: " + to_string(userInputBalance));
+    cout << "Your amount has been deposited!\n";
+}
+
+void withdrawAmount()
+{
+    int userInputAccountNo, userInputPin, userInputBalance;
+    cout << "Enter your account number: ";
+    cin >> userInputAccountNo;
+    if (!isAccountPresent(userInputAccountNo))
+    {
+        cout << "Account not present!!\n";
+        cout << "Try Again.\n";
+        withdrawAmount();
+    }
+    User foundedAccount = foundAccount(userInputAccountNo);
+    cout << "Enter your pin: ";
+    cin >> userInputPin;
+    if (!isCorrectPin(foundedAccount, userInputPin))
+    {
+        cout << "Pin is incorrect!!\n";
+        cout << "Try Again.\n";
+        withdrawAmount();
+    }
+
+    if (foundedAccount.balance <= 0)
+    {
+        cout << "Your balance is 0. Amount cannot be withdrawed\n";
+        return;
+    }
+
+    cout << "Enter balance you want to withdraw: ";
+    cin >> userInputBalance;
+    if (userInputBalance <= 0)
+    {
+        cout << "Invalid amount. Please enter a positive number.\n";
+        cout << "Try Again\n";
+        withdrawAmount();
+    }
+
+    foundedAccount.balance -= userInputBalance;
+    foundedAccount.transactionHistory.push_back("Withdraw: " + to_string(userInputBalance));
+    cout << "Your amount has been withdrawed!\n";
+}
+
+void updateAccount(){
+    int userInputAccountNo, userInputPin, userInputBalance;
+    cout << "Enter your account number: ";
+    cin >> userInputAccountNo;
+    if (!isAccountPresent(userInputAccountNo))
+    {
+        cout << "Account not present!!\n";
+        cout << "Try Again.\n";
+        updateAccount();
+    }
+    User foundedAccount = foundAccount(userInputAccountNo);
+    cout << "Enter your pin: ";
+    cin >> userInputPin;
+    if (!isCorrectPin(foundedAccount, userInputPin))
+    {
+        cout << "Pin is incorrect!!\n";
+        cout << "Try Again.\n";
+        updateAccount();
+    }
+
+
+}
+
+void systemHelpList()
+{
     cout << "\n======== Bank Management System ========" << endl;
     cout << "1. Create Account\n";
     cout << "2. See account details\n";
     cout << "3. Deposite amount\n";
     cout << "4. Withdraw amount\n";
     cout << "5. Update account details\n";
-    cout << "6. Exit\n";
+    cout << "6. See Your transaction history\n";
+    cout << "7. Exit\n";
 }
 
 int main()
@@ -130,27 +287,21 @@ int main()
         }
         case 2:
         {
-            int userInputAccountNo, userInputPin;
-            cout << "Enter your account number: ";
-            cin >> userInputAccountNo;
-
-            bool found = false;
-
-            for (const auto &user : users)
-            {
-                if (isCorrectAccount(user, userInputAccountNo))
-                {
-                    cout << "Enter your pin: ";
-                    cin >> userInputPin;
-                    showAccountDetails(user, userInputPin);
-                    found = true;
-                    break;
-                }
-            }
-            if(!found){
-                cout<<"Account not found!!\n";
-                cout<<"Try Again\n";
-            }
+            showAccountDetail();
+            break;
+        }
+        case 3:
+        {
+            depositeAomount();
+            break;
+        }
+        case 4:
+        {
+            withdrawAmount();
+            break;
+        }
+        case 5:
+        {
             break;
         }
         }
